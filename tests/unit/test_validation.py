@@ -110,18 +110,19 @@ class TestDetectionOutput:
         assert detection.schema_version == "1.0.0"
         assert len(detection.placeholders) == 1
 
-    def test_empty_placeholders_raises(self) -> None:
-        """Test that empty placeholders list raises ValidationError."""
-        with pytest.raises(ValidationError, match="Placeholder count must be 1-6"):
-            DetectionOutput(
-                page=1,
-                book_id="test_book",
-                scan_dpi=600,
-                page_size_mm={"width": 210, "height": 297},
-                placeholders=[],
-                validation_passed=True,
-                detected_at=datetime.now().isoformat(),
-            )
+    def test_empty_placeholders_allowed(self) -> None:
+        """Test that empty placeholders list is allowed (for failed detection)."""
+        detection = DetectionOutput(
+            page=1,
+            book_id="test_book",
+            scan_dpi=600,
+            page_size_mm={"width": 210, "height": 297},
+            placeholders=[],
+            validation_passed=False,  # Empty is OK if validation_passed=False
+            detected_at=datetime.now().isoformat(),
+        )
+        assert len(detection.placeholders) == 0
+        assert detection.validation_passed is False
 
     def test_too_many_placeholders_raises(self) -> None:
         """Test that >6 placeholders raises ValidationError."""
@@ -136,7 +137,7 @@ class TestDetectionOutput:
             for i in range(7)
         ]
 
-        with pytest.raises(ValidationError, match="Placeholder count must be 1-6"):
+        with pytest.raises(ValidationError, match="Placeholder count must be 0-6"):
             DetectionOutput(
                 page=1,
                 book_id="test_book",

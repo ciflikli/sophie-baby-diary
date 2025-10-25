@@ -9,7 +9,7 @@ This module handles:
 from pathlib import Path
 from typing import TypedDict
 
-import fitz  # type: ignore[import-untyped]  # PyMuPDF lacks type stubs
+import fitz
 
 
 class PageMetadata(TypedDict):

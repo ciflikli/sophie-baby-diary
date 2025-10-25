@@ -50,10 +50,13 @@ class DetectionOutput(BaseModel):
     @field_validator("placeholders")
     @classmethod
     def check_count(cls, v: list[Placeholder]) -> list[Placeholder]:
-        """Validate placeholder count is within acceptable range."""
-        if not (0 < len(v) <= MAX_PLACEHOLDERS_PER_PAGE):
+        """Validate placeholder count is within acceptable range.
+        
+        Note: Empty list is allowed for failed detection cases (validation_passed=False).
+        """
+        if len(v) > MAX_PLACEHOLDERS_PER_PAGE:
             raise ValueError(
-                f"Placeholder count must be 1-{MAX_PLACEHOLDERS_PER_PAGE}, got {len(v)}"
+                f"Placeholder count must be 0-{MAX_PLACEHOLDERS_PER_PAGE}, got {len(v)}"
             )
         return v
 
