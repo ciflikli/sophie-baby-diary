@@ -11,6 +11,9 @@ Usage:
 """
 
 import json
+import logging
+import sys
+from datetime import datetime
 from pathlib import Path
 
 import click
@@ -18,6 +21,15 @@ import click
 from modules.detection import DoclingDetector, detect_placeholders_in_pdf
 from modules.layout import create_layout
 from modules.rendering import render_pdf
+
+# Configure root logger
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)],
+)
+
+logger = logging.getLogger(__name__)
 
 
 @click.group()
@@ -184,23 +196,53 @@ def pipeline(
         - Detection JSON: detections/{book_id}/
         - Layout JSON: layouts/{book_id}/
         - Print-ready PDFs: output/{book_id}/
+        - Log file: logs/{book_id}/pipeline_{timestamp}.log
     """
+    # Setup file logging
+    log_dir = Path(f"logs/{book_id}")
+    log_dir.mkdir(parents=True, exist_ok=True)
+    
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_file = log_dir / f"pipeline_{timestamp}.log"
+    
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(
+        logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    )
+    logging.getLogger().addHandler(file_handler)
+    
+    logger.info(f"Starting pipeline for book_id: {book_id}")
+    logger.info(f"PDF: {pdf_path}")
+    logger.info(f"Image directory: {image_dir}")
+    logger.info(f"Paper type: {paper_type}")
+    logger.info(f"Scaling mode: {scaling_mode}")
+    
     click.echo("=" * 60)
     click.echo("🎨 Sophie Baby Diary - Full Pipeline")
     click.echo("=" * 60)
     
-    click.echo("\n📍 Phase 1: Detecting placeholders...")
-    ctx.invoke(detect, pdf_path=pdf_path, book_id=book_id)
-    
-    click.echo("\n📍 Phase 2: Generating layouts...")
-    ctx.invoke(layout, book_id=book_id, image_dir=image_dir, scaling_mode=scaling_mode)
-    
-    click.echo("\n📍 Phase 3: Rendering PDFs...")
-    ctx.invoke(render, book_id=book_id, paper_type=paper_type)
-    
-    click.echo("\n" + "=" * 60)
-    click.echo(f"✅ Pipeline complete! Check output/{book_id}/")
-    click.echo("=" * 60)
+    try:
+        click.echo("\n📍 Phase 1: Detecting placeholders...")
+        ctx.invoke(detect, pdf_path=pdf_path, book_id=book_id)
+        
+        click.echo("\n📍 Phase 2: Generating layouts...")
+        ctx.invoke(layout, book_id=book_id, image_dir=image_dir, scaling_mode=scaling_mode)
+        
+        click.echo("\n📍 Phase 3: Rendering PDFs...")
+        ctx.invoke(render, book_id=book_id, paper_type=paper_type)
+        
+        click.echo("\n" + "=" * 60)
+        click.echo(f"✅ Pipeline complete! Check output/{book_id}/")
+        click.echo("=" * 60)
+        click.echo(f"📄 Log file: {log_file}")
+        
+        logger.info("Pipeline completed successfully")
+        
+    except Exception as e:
+        click.echo(f"\n❌ Pipeline failed: {e}", err=True)
+        logger.error(f"Pipeline failed: {e}", exc_info=True)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
