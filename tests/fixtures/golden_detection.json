@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0.0",
+  "page": 1,
+  "book_id": "test_book",
+  "scan_dpi": 600,
+  "page_size_mm": {
+    "width": 210,
+    "height": 297
+  },
+  "coordinate_system": "top_left_mm",
+  "placeholders": [
+    {
+      "id": "page_001_ph_01",
+      "bbox_mm": {
+        "x": 20,
+        "y": 40,
+        "width": 80,
+        "height": 60
+      },
+      "detection_method": "manual",
+      "confidence": 1.0,
+      "notes": "test_placeholder"
+    }
+  ],
+  "validation_passed": true,
+  "detected_at": "2025-10-25T14:55:13.248598"
+}
