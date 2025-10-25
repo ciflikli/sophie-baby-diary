@@ -1,0 +1,64 @@
+[project]
+name = "sophie-baby-diary"
+version = "0.1.0"
+description = "Automate photo placeholder detection and printing for Sophie the Giraffe baby diary"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+    {name = "Gokhan Ciflikli", email = "gokhanciflikli@users.noreply.github.com"}
+]
+dependencies = [
+    "pymupdf>=1.23.0",      # PDF → image rasterization
+    "pillow>=10.0.0",       # Image processing
+    "reportlab>=4.0.0",     # PDF generation
+    "pydantic>=2.0.0",      # Schema validation
+    "docling>=2.58.0",      # Layout detection (primary) - latest as of Oct 2025
+    "click>=8.0.0",         # CLI framework
+    "pytest>=7.4.0",        # Testing
+    "pytest-cov>=4.1.0",    # Coverage
+]
+
+[project.optional-dependencies]
+yolo = [
+    "ultralytics==8.1.0",   # YOLO fallback detector
+    "torch>=2.0.0"          # PyTorch for YOLO (MPS support on Mac)
+]
+dev = [
+    "ruff>=0.1.0",          # Linting and formatting
+    "mypy>=1.7.0",          # Type checking
+    "pre-commit>=3.5.0",    # Git hooks
+]
+
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["modules"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--cov=modules",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = []
