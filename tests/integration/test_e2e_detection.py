@@ -34,20 +34,20 @@ class TestDetectionPipeline:
         assert len(results) == 1, "Should process 1 page"
 
         result = results[0]
-        assert result["page"] == 1
-        assert result["book_id"] == "test_synthetic"
-        assert result["scan_dpi"] == 600
-        assert "page_size_mm" in result
+        assert result.page == 1
+        assert result.book_id == "test_synthetic"
+        assert result.scan_dpi == 600
+        assert result.page_size_mm is not None
 
         # Verify A4 dimensions (approximately)
-        page_size = result["page_size_mm"]
+        page_size = result.page_size_mm
         assert abs(page_size["width"] - 210) < 5, f"Width {page_size['width']} not close to 210mm"
         assert abs(page_size["height"] - 297) < 5, f"Height {page_size['height']} not close to 297mm"
 
         # DoclingDetector returns empty list (not implemented yet)
-        # So placeholders will be empty, but validation should pass
-        assert isinstance(result["placeholders"], list)
-        assert result["validation_passed"] in [True, False]  # Either is acceptable
+        # So placeholders will be empty, validation_passed should be False
+        assert isinstance(result.placeholders, list)
+        assert result.validation_passed is False  # No placeholders detected
 
         # Verify detection JSON was saved
         detection_json_path = Path(f"detections/{book_id}/page_0001.json")

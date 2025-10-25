@@ -82,7 +82,7 @@ def detect_placeholders_in_pdf(
     pdf_path: str,
     book_id: str,
     detector: Detector,
-) -> list[dict[str, object]]:
+) -> list[DetectionOutput]:
     """Full detection pipeline: PDF → rasterize → detect → validate → save JSON.
 
     Args:
@@ -91,7 +91,7 @@ def detect_placeholders_in_pdf(
         detector: Detector instance to use for placeholder detection
 
     Returns:
-        List of detection result dicts (one per page)
+        List of DetectionOutput models (one per page)
 
     Raises:
         FileNotFoundError: If PDF file doesn't exist
@@ -107,7 +107,7 @@ def detect_placeholders_in_pdf(
     pages_metadata = rasterize_pdf(pdf_path, f"pages/{book_id}", SCAN_DPI, book_id)
     logger.info(f"Rasterized {len(pages_metadata)} pages")
 
-    results: list[dict[str, object]] = []
+    results: list[DetectionOutput] = []
 
     # 2. Detect placeholders in each page
     for meta in pages_metadata:
@@ -132,18 +132,19 @@ def detect_placeholders_in_pdf(
             scan_dpi=SCAN_DPI,
             page_size_mm={"width": page_width_mm, "height": page_height_mm},
             placeholders=placeholders if placeholders else [],  # Empty list if no detections
-            validation_passed=True,  # Will be set by validator
+            validation_passed=len(placeholders) > 0,  # False if no placeholders detected
             detected_at=datetime.now().isoformat(),
         )
 
-        # 4. Validate (Pydantic will raise ValidationError if invalid)
+        # 4. Validate schema (Pydantic will raise ValidationError if invalid)
         try:
-            # Pydantic v2: model_validate checks the model
+            # Pydantic v2: model_validate checks the model schema
             DetectionOutput.model_validate(detection.model_dump())
-            detection.validation_passed = True
-            logger.info(f"Validation passed for page {meta['page_num']}")
+            # Keep validation_passed as set above (based on placeholder count)
+            # Schema validation passes, but detection may have failed (empty list)
+            logger.info(f"Schema validation passed for page {meta['page_num']}")
         except Exception as e:
-            logger.error(f"Validation failed for page {meta['page_num']}: {e}")
+            logger.error(f"Schema validation failed for page {meta['page_num']}: {e}")
             detection.validation_passed = False
 
         # 5. Save JSON
@@ -154,6 +155,6 @@ def detect_placeholders_in_pdf(
         output_path.write_text(detection.model_dump_json(indent=2))
         logger.info(f"Saved detection to {output_path}")
 
-        results.append(detection.model_dump())
+        results.append(detection)
 
     return results

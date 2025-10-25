@@ -11,7 +11,6 @@ Usage:
 """
 
 import json
-import sys
 from pathlib import Path
 
 import click
@@ -46,7 +45,7 @@ def detect(pdf_path: str, book_id: str) -> None:
     detector = DoclingDetector()
     results = detect_placeholders_in_pdf(pdf_path, book_id, detector)
     
-    total_placeholders = sum(len(r["placeholders"]) for r in results)  # type: ignore[misc,arg-type]
+    total_placeholders = sum(len(r.placeholders) for r in results)
     click.echo(f"✓ Detected {total_placeholders} placeholders in {len(results)} pages")
     click.echo(f"📁 Detection JSON saved to: detections/{book_id}/")
 
@@ -73,14 +72,13 @@ def layout(book_id: str, image_dir: str, scaling_mode: str, print_dpi: int) -> N
     # Find all detection JSONs for this book
     detection_dir = Path(f"detections/{book_id}")
     if not detection_dir.exists():
-        click.echo(f"❌ Error: No detections found at {detection_dir}", err=True)
-        click.echo(f"   Run 'detect' command first", err=True)
-        sys.exit(1)
+        raise click.ClickException(
+            f"No detections found at {detection_dir}. Run 'detect' command first."
+        )
     
     detection_files = sorted(detection_dir.glob("page_*.json"))
     if not detection_files:
-        click.echo(f"❌ Error: No detection JSON files in {detection_dir}", err=True)
-        sys.exit(1)
+        raise click.ClickException(f"No detection JSON files in {detection_dir}")
     
     # Create layouts directory
     layout_dir = Path(f"layouts/{book_id}")
@@ -131,14 +129,13 @@ def render(book_id: str, paper_type: str) -> None:
     # Find all layout JSONs for this book
     layout_dir = Path(f"layouts/{book_id}")
     if not layout_dir.exists():
-        click.echo(f"❌ Error: No layouts found at {layout_dir}", err=True)
-        click.echo(f"   Run 'layout' command first", err=True)
-        sys.exit(1)
+        raise click.ClickException(
+            f"No layouts found at {layout_dir}. Run 'layout' command first."
+        )
     
     layout_files = sorted(layout_dir.glob("page_*.json"))
     if not layout_files:
-        click.echo(f"❌ Error: No layout JSON files in {layout_dir}", err=True)
-        sys.exit(1)
+        raise click.ClickException(f"No layout JSON files in {layout_dir}")
     
     # Create output directory
     output_dir = Path(f"output/{book_id}")
@@ -152,7 +149,7 @@ def render(book_id: str, paper_type: str) -> None:
         try:
             render_pdf(str(layout_path), paper_type, str(output_path))
             click.echo(f"  ✓ {page_num}.pdf")
-        except Exception as e:
+        except (FileNotFoundError, KeyError, ValueError) as e:
             click.echo(f"  ❌ {page_num}: {e}", err=True)
     
     click.echo(f"✓ Rendered {len(layout_files)} PDFs")
