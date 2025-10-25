@@ -126,12 +126,14 @@ def layout(book_id: str, image_dir: str, scaling_mode: str, print_dpi: int) -> N
 @cli.command()
 @click.argument("book_id")
 @click.option("--paper-type", default="A4", help="Paper type (A4, A5, etc.)")
-def render(book_id: str, paper_type: str) -> None:
+@click.option("--printer", default="default", help="Printer name for calibration lookup")
+def render(book_id: str, paper_type: str, printer: str) -> None:
     """Render print-ready PDFs from layouts.
     
     Args:
         book_id: Book identifier (matches layout output)
         paper_type: Paper size from config.PAPER_TYPES
+        printer: Printer name for calibration (uses printer_calibration_{printer}_{paper}.json)
     
     Output:
         - Print-ready PDFs: output/{book_id}/page_NNNN.pdf
@@ -159,7 +161,7 @@ def render(book_id: str, paper_type: str) -> None:
         output_path = output_dir / f"{page_num}.pdf"
         
         try:
-            render_pdf(str(layout_path), paper_type, str(output_path))
+            render_pdf(str(layout_path), paper_type, str(output_path), printer_name=printer)
             click.echo(f"  ✓ {page_num}.pdf")
         except (FileNotFoundError, KeyError, ValueError) as e:
             click.echo(f"  ❌ {page_num}: {e}", err=True)
@@ -174,6 +176,7 @@ def render(book_id: str, paper_type: str) -> None:
 @click.option("--image-dir", default="input_images", help="Directory containing user images")
 @click.option("--paper-type", default="A4", help="Paper type (A4, A5, etc.)")
 @click.option("--scaling-mode", default="fill", type=click.Choice(["fill", "fit"]), help="Image scaling mode")
+@click.option("--printer", default="default", help="Printer name for calibration lookup")
 @click.pass_context
 def pipeline(
     ctx: click.Context,
@@ -182,6 +185,7 @@ def pipeline(
     image_dir: str,
     paper_type: str,
     scaling_mode: str,
+    printer: str,
 ) -> None:
     """Run full pipeline: detect → layout → render.
     
@@ -230,7 +234,7 @@ def pipeline(
         ctx.invoke(layout, book_id=book_id, image_dir=image_dir, scaling_mode=scaling_mode)
         
         click.echo("\n📍 Phase 3: Rendering PDFs...")
-        ctx.invoke(render, book_id=book_id, paper_type=paper_type)
+        ctx.invoke(render, book_id=book_id, paper_type=paper_type, printer=printer)
         
         click.echo("\n" + "=" * 60)
         click.echo(f"✅ Pipeline complete! Check output/{book_id}/")
