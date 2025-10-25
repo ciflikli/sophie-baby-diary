@@ -16,12 +16,13 @@ Active development following IMPLEMENTATION_PLAN.md with phased rollout.
 
 **After completion of each phase, critically assess the code for:**
 
-1. **Logic**: Correctness, edge cases, algorithm soundness
-2. **Accuracy**: Math correctness, type safety, unit conversions
-3. **Modularity**: Separation of concerns, reusability, coupling
-4. **Performance**: Time/space complexity, unnecessary operations, caching opportunities
-5. **Maintainability**: Readability, documentation, testability, debugging ease
-6. **Best Practices**: Python idioms, type hints, error handling, security
+1. **Minimalism**: Only building what is needed, no over-engineering, YAGNI principle
+2. **Logic**: Correctness, edge cases, algorithm soundness
+3. **Accuracy**: Math correctness, type safety, unit conversions
+4. **Modularity**: Separation of concerns, reusability, coupling
+5. **Performance**: Time/space complexity, unnecessary operations, caching opportunities
+6. **Maintainability**: Readability, documentation, testability, debugging ease
+7. **Best Practices**: Python idioms, type hints, error handling, security
 
 **Format**: Provide scorecard (1-10) for each criterion with:
 - Issues found (with line references)
